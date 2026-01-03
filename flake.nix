@@ -123,9 +123,10 @@
       ],
       "sources": [
         {
-          "type": "archive",
-          "url": "https://github.com/haasn/libplacebo/archive/refs/tags/v6.338.2.tar.gz",
-          "sha256": "2f1e624e09d72a8c9db70f910f7560e764a1c126dae42acc5b3bcef836a7aec6"
+          "type": "git",
+          "url": "https://github.com/haasn/libplacebo.git",
+          "tag": "v6.338.2",
+          "recursive": true
         }
       ]
     },
