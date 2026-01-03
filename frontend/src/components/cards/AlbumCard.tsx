@@ -5,6 +5,7 @@ import { useLocation } from "wouter";
 import { ChakraIcon } from "../ChackraIcon";
 import { FaClock, FaMusic } from "react-icons/fa6";
 import { useEffect, useState } from "react";
+import { BiSolidAlbum } from "react-icons/bi";
 
 type Item = {
   path: string;
@@ -16,7 +17,7 @@ type Item = {
 };
 
 export const AlbumCard = ({ item }: { item: Item }) => {
-  const [location, navigate] = useLocation();
+  const [_, navigate] = useLocation();
   const [image, setImage] = useState<string | null>(null);
   const getImage = async (albumName: string) => {
     const res = await GetAlbumImage(albumName);
@@ -52,18 +53,25 @@ export const AlbumCard = ({ item }: { item: Item }) => {
           bg: getNeutral("dark", 600),
         }}
         pos={"relative"}
+        display={"flex"}
+        alignItems={"center"}
+        justifyContent={"center"}
       >
-        <Image
-          src={`${image}`}
-          alt={item.album}
-          objectFit={"cover"}
-          width={"100%"}
-          height={"100%"}
-          border={"none"}
-          onError={(e) => {
-            e.currentTarget.style.border = "none";
-          }}
-        />
+        {image ? (
+          <Image
+            src={`${image}`}
+            alt={item.album}
+            objectFit={"cover"}
+            width={"100%"}
+            height={"100%"}
+            border={"none"}
+            onError={(e) => {
+              e.currentTarget.style.border = "none";
+            }}
+          />
+        ) : (
+          <ChakraIcon icon={BiSolidAlbum} boxSize={20} opacity={0.2} />
+        )}
         <Box
           pos={"absolute"}
           width={"100%"}

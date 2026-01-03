@@ -17,7 +17,6 @@ import { DefaultButton } from "../buttons";
 const DialogOverlay: any = Dialog.Backdrop;
 const DialogContent: any = Dialog.Content;
 const DialogPositioner: any = Dialog.Positioner;
-const DialogTrigger: any = Dialog.Trigger;
 const DialogBody: any = Dialog.Body;
 const DirScanner = ({
   open,
@@ -94,6 +93,7 @@ const DirScanner = ({
                       e.stopPropagation();
                       handleScan(toBeScanned);
                     }}
+                    disabled={!toBeScanned}
                   >
                     scan
                   </DefaultButton>
@@ -202,6 +202,7 @@ const DirScanner = ({
                             onDoubleClick={(e) => {
                               e.stopPropagation();
                               setNavPath(navPath + "/" + dir);
+                              setToBeScanned(navPath + "/" + dir);
                             }}
                           >
                             <Box>

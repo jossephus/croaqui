@@ -75,7 +75,7 @@ func (m *Mpris) Startup(ctx context.Context, playerController PlayerController) 
 		Name: "/org/mpris/MediaPlayer2",
 		Interfaces: []introspect.Interface{
 			{
-				Name: "org.mpris.MeidaPlayer2.Player",
+				Name: "org.mpris.MediaPlayer2.Player",
 				Methods: []introspect.Method{
 					{Name: "Play"},
 					{Name: "Pause"},
@@ -136,7 +136,7 @@ func (mp *MpriPlayer) PlayPause() *dbus.Error {
 		Paused   bool    `json:"paused"`
 		Position float64 `json:"position"`
 	}); ok {
-		fmt.Println("coming deom olay pause")
+	
 
 		runtime.EventsEmit(mp.ctx, "MPRIS", struct {
 			Type   string `json:"type"`

@@ -1,7 +1,7 @@
 import "./App.css";
 import Player from "./features/Player";
 import { Box, Text } from "@chakra-ui/react";
-import { getNeutral, getQueue, shuffleQueue } from "./utils";
+import { getNeutral, shuffleQueue } from "./utils";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { NavBar } from "./features/navbar";
 import { Route, Switch, useRoute } from "wouter";
@@ -16,15 +16,18 @@ import {
   useQueueStore,
   useSidebarDisclosure,
 } from "./store";
-import { ChakraIcon } from "./components/ChackraIcon";
-import { BsGripVertical } from "react-icons/bs";
 import { MiniPlayer } from "./features/miniPlayer";
 import { AlbumsLayout } from "./pages/albums/AlbumsLayout";
 import { SearchResults } from "./pages/searchResults";
 import { SidebarNavigator } from "./features/sidebar-navigator";
 import { QueueBar } from "./features/queue-bar";
-import { GetImage, GetStatus } from "wailsjs/go/player/Player";
-import { handleNext, handlePrev } from "./utils/action";
+import { GetStatus } from "wailsjs/go/player/Player";
+import {
+  handleNext,
+  handlePrev,
+  loadAudio,
+  setMpvPlayerStats,
+} from "./utils/action";
 
 function App() {
   const { showToast } = useShowToast();
@@ -35,16 +38,40 @@ function App() {
   const shuffle = useQueueStore((state) => state.shuffle);
   const togglePaused = usePlayerStore((state) => state.togglePaused);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
-  const setCurrentTrackImage = usePlayerStore(
-    (state) => state.setCurrentTrackImage,
-  );
+  const muted = usePlayerStore((state) => state.muted);
+  const speed = usePlayerStore((state) => state.speed);
+  const volume = usePlayerStore((state) => state.volume);
+  const position = usePlayerStore((state) => state.position);
+
   const setPlayerStatus = usePlayerStore((state) => state.setPlayerStatus);
   const [scanMsg, setScanMsg] = useState("");
   const { isSmall } = useScreenSize();
 
   const [match, params] = useRoute("/albums/:albumId");
+  const setPlayingIndex = useQueueStore((state) => state.setPlayingIndex);
+
+  const handleLoadAudio = async (item: any) => {
+    setPlayingIndex(0);
+    await loadAudio(item, true);
+    // const queue = await handleGetQueue(item);
+    // setQueue(queue);
+  };
 
   useLayoutEffect(() => {
+    // setting persisted state
+    if (currentTrack) {
+      handleLoadAudio(currentTrack).then(() => {
+        setMpvPlayerStats({
+          muted,
+          speed,
+          volume,
+          paused: true,
+          position,
+          duration: 0,
+        });
+      });
+    }
+
     const cancelToastError = EventsOn("toast:err", (err) => {
       showToast("error", err.message);
     });
@@ -56,11 +83,7 @@ function App() {
     });
 
     const cancelFileLoaded = EventsOn("MPV:FILE_LOADED", () => {
-      // GetImage().then((res) => {
-      //   setCurrentTrackImage(res.data.image);
-      // });
       GetStatus().then((res) => {
-        console.log("about to set all", res);
         setPlayerStatus(res.data);
       });
     });
@@ -71,7 +94,6 @@ function App() {
     });
 
     const cancelMpris = EventsOn("MPRIS", (data) => {
-      console.log("MPRIS CALLED", data.action, data.type);
       switch (data.type) {
         case "playpause":
           togglePaused(data.action);
@@ -151,19 +173,25 @@ function App() {
           </Box>
 
           <Player />
+
           <Box
             textAlign={"left"}
             width={"100%"}
             height={"16px"}
             overflow={"hidden"}
+            color={getNeutral("light", 300)}
+            _dark={{
+              color: getNeutral("dark", 300),
+            }}
+            pos={"absolute"}
+            bottom={0}
+            px={1}
           >
-            {scanMsg && scanMsg !== "" && (
-              <>
-                <Text fontSize={"xs"} color={"white"}>
-                  {scanMsg}
-                </Text>
-              </>
-            )}
+            <>
+              {scanMsg && scanMsg !== "" && (
+                <Text fontSize={"xs"}>{scanMsg}</Text>
+              )}
+            </>
           </Box>
         </Box>
       )}

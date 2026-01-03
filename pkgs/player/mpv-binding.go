@@ -30,7 +30,7 @@ type PlayerStatus struct {
 	Position any `json:"position"`
 	Duration any `json:"duration"`
 	Volume   any `json:"volume"`
-	Muted    any `json:"Muted"`
+	Muted    any `json:"muted"`
 	Speed    any `json:"speed"`
 }
 
@@ -114,7 +114,6 @@ func (p *Player) EventLoop(eventLoopReady chan struct{}) {
 			case mpv.EventEnd:
 				end := ev.EndFile()
 				if end.Reason == mpv.EndFileEOF {
-					fmt.Println("ended because of eof")
 					runtime.EventsEmit(p.ctx, "MPV:END", struct {
 						Reason  string `json:"reason"`
 						Message string `json:"message"`
@@ -123,7 +122,6 @@ func (p *Player) EventLoop(eventLoopReady chan struct{}) {
 						Message: "end of file reached",
 					})
 				} else {
-					fmt.Println("ended for some stupid reason", end.Reason)
 					runtime.EventsEmit(p.ctx, "MPV:END", struct {
 						Reason  string `json:"reason"`
 						Message string `json:"message"`
@@ -132,7 +130,6 @@ func (p *Player) EventLoop(eventLoopReady chan struct{}) {
 					})
 				}
 			case mpv.EventFileLoaded:
-				fmt.Println("the file is loaded")
 
 				go p.GetMetadata()
 				runtime.EventsEmit(p.ctx, "MPV:FILE_LOADED", struct{}{})
@@ -142,7 +139,7 @@ func (p *Player) EventLoop(eventLoopReady chan struct{}) {
 	}
 }
 
-func (p *Player) LoadMusic(url string) (*ReturnType, error) {
+func (p *Player) LoadMusic(url string, paused bool) (*ReturnType, error) {
 
 	runtime.EventsEmit(p.ctx, "MPV:END", struct {
 		Reason  string `json:"reason"`
@@ -150,6 +147,10 @@ func (p *Player) LoadMusic(url string) (*ReturnType, error) {
 	}{Reason: "restarting", Message: "restarting file"})
 	_, err := p.execute(
 		func() (any, error) {
+			err := p.mpv.SetProperty("pause", mpv.FormatFlag, paused)
+			if err != nil {
+				return nil, err
+			}
 			return nil, p.mpv.Command([]string{"loadfile", url})
 		},
 	)
@@ -207,7 +208,7 @@ func (p *Player) GetMetadata() (*ReturnType, error) {
 		return nil, err
 	}
 
-	fmt.Println("showing metadata", result)
+
 	dbusMd := map[string]dbus.Variant{
 		// "mpris:trackid": dbus.MakeVariant(dbus.ObjectPath("/track/1")),
 		"xesam:title":  dbus.MakeVariant(result.Title),
@@ -306,7 +307,6 @@ func (p *Player) SetSpeed(speed float64) (*ReturnType, error) {
 	result := data.(struct {
 		Speed float64 `json:"speed"`
 	})
-	fmt.Println("Speed set successfully", result)
 	return &ReturnType{Data: struct {
 		Speed float64 `json:"speed"`
 	}{Speed: result.Speed}}, err
@@ -439,6 +439,61 @@ func (p *Player) GetImage(path string) (*ReturnType, error) {
 		Success bool   `json:"success"`
 		Image   string `json:"image"`
 	}{Success: true, Image: fmt.Sprintf("data:%s;base64,%s", res.MimeType, img)}}, nil
+}
+
+func (p *Player) SetPlayerStats(playerStatus PlayerStatus) (*ReturnType, error) {
+	data, err := p.execute(func() (any, error) {
+		res := PlayerStatus{}
+
+		if playerStatus.Paused != nil {
+			if err := p.mpv.SetProperty("pause", mpv.FormatFlag, playerStatus.Paused.(bool)); err != nil {
+				return nil, err
+			}
+			res.Paused = playerStatus.Paused
+		}
+
+		if playerStatus.Volume != nil {
+			volume := int64(playerStatus.Volume.(float64))
+			if err := p.mpv.SetProperty("volume", mpv.FormatInt64, volume); err != nil {
+				return nil, err
+			}
+			res.Volume = playerStatus.Volume
+		}
+
+		if playerStatus.Muted != nil {
+			if err := p.mpv.SetProperty("mute", mpv.FormatFlag, playerStatus.Muted.(bool)); err != nil {
+				return nil, err
+			}
+
+			res.Muted = playerStatus.Muted
+		}
+
+		if playerStatus.Speed != nil {
+			if err := p.mpv.SetProperty("speed", mpv.FormatDouble, playerStatus.Speed.(float64)); err != nil {
+				return nil, err
+			}
+			res.Speed = playerStatus.Speed
+		}
+
+		if playerStatus.Position != nil {
+			if err := p.mpv.SetProperty("time-pos", mpv.FormatDouble, playerStatus.Position.(float64)); err != nil {
+				return nil, err
+			}
+			res.Position = playerStatus.Position
+		}
+
+		return res, nil
+	})
+
+	if err != nil || data == nil {
+		return &ReturnType{Data: struct {
+			Updated PlayerStatus `json:"updated"`
+		}{Updated: PlayerStatus{}}}, err
+	}
+
+	return &ReturnType{Data: struct {
+		Updated PlayerStatus `json:"updated"`
+	}{Updated: data.(PlayerStatus)}}, err
 }
 
 func (p *Player) OnShutdown() {
