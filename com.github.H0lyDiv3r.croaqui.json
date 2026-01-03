@@ -1,0 +1,147 @@
+{
+  "app-id": "com.github.H0lyDiv3r.croaqui",
+  "runtime": "org.freedesktop.Platform",
+  "runtime-version": "24.08",
+  "sdk": "org.freedesktop.Sdk",
+  "command": "croaqui",
+  "finish-args": [
+    "--share=ipc",
+    "--socket=fallback-x11",
+    "--socket=wayland",
+    "--device=dri",
+    "--filesystem=home:ro",
+    "--talk-name=org.freedesktop.Notifications"
+  ],
+  "modules": [
+    {
+      "name": "wails-runtime-deps",
+      "buildsystem": "simple",
+      "build-commands": [
+        "install -d /app/lib/pkgconfig"
+      ],
+      "modules": [
+        {
+          "name": "taglib",
+          "buildsystem": "cmake-ninja",
+          "config-opts": [
+            "-DBUILD_SHARED_LIBS=ON"
+          ],
+          "sources": [
+            {
+              "type": "archive",
+              "url": "https://taglib.github.io/releases/taglib-2.0.tar.gz",
+              "sha256": "0618c2d5aa7825564f4c9f8b4d7c551c4e48f2a9f7054545e3ac6df0b4897c5d"
+            }
+          ]
+        },
+        {
+          "name": "mpv",
+          "buildsystem": "meson",
+          "config-opts": [
+            "-Dlua=disabled",
+            "-Djavascript=disabled",
+            "-Dlibarchive=disabled",
+            "-Dcdda=disabled",
+            "-Ddvdnav=disabled",
+            "-Dbluray=disabled",
+            "-Dvapoursynth=disabled"
+          ],
+          "sources": [
+            {
+              "type": "archive",
+              "url": "https://github.com/mpv-player/mpv/archive/refs/tags/v0.38.0.tar.gz",
+              "sha256": "5a7d1f9a0d5c2f5a9b4f5a9b4f5a9b4f5a9b4f5a9b4f5a9b4f5a9b4f5a9b4f5a9"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "go",
+      "buildsystem": "simple",
+      "build-commands": [
+        "install -d /app",
+        "cp -a . /app/go"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://go.dev/dl/go1.22.5.linux-amd64.tar.gz",
+          "sha256": "4236a8a560c81cbb49626c5538270cbf9e5290f3835479239444c52675a72523",
+          "dest": "."
+        }
+      ]
+    },
+    {
+      "name": "node",
+      "buildsystem": "simple",
+      "build-commands": [
+        "install -d /app",
+        "cp -a . /app/node"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://nodejs.org/dist/v20.15.0/node-v20.15.0-linux-x64.tar.xz",
+          "sha256": "0c75e8225d8c5c1f8e45450b9478401b4d5b7d8e9a0b1c2d3e4f5a6b7c8d9e0f",
+          "dest": "."
+        }
+      ]
+    },
+    {
+      "name": "wails",
+      "buildsystem": "simple",
+      "build-commands": [
+        "export PATH=/app/go/bin:/app/node/bin:$PATH",
+        "go install github.com/wailsapp/wails/v2/cmd/wails@v2.9.2",
+        "install -D /root/go/bin/wails /app/bin/wails"
+      ],
+      "build-options": {
+        "env": {
+          "PATH": "/app/go/bin:/app/node/bin:/usr/bin:/bin",
+          "GOPATH": "/root/go",
+          "CGO_ENABLED": "1"
+        }
+      }
+    },
+    {
+      "name": "croaqui",
+      "buildsystem": "simple",
+      "build-commands": [
+        "export PATH=/app/go/bin:/app/node/bin:$PATH",
+        "export GOPATH=/root/go",
+        "export CGO_ENABLED=1",
+        "export PKG_CONFIG_PATH=/app/lib/pkgconfig",
+        "export CGO_CFLAGS=\"-I/app/include\"",
+        "export CGO_LDFLAGS=\"-L/app/lib -ltag_c -ltag -lstdc++ -lz -lm -lmpv\"",
+        "cd /app/share/croaqui",
+        "wails build -clean -platform linux/amd64",
+        "install -Dm755 build/bin/croaqui /app/bin/croaqui",
+        "install -Dm644 frontend/assets/images/logo-universal.png /app/share/icons/hicolor/256x256/apps/com.github.H0lyDiv3r.croaqui.png 2>/dev/null || true",
+        "install -Dm644 com.github.H0lyDiv3r.croaqui.desktop /app/share/applications/com.github.H0lyDiv3r.croaqui.desktop",
+        "install -Dm644 com.github.H0lyDiv3r.croaqui.metainfo.xml /app/share/metainfo/com.github.H0lyDiv3r.croaqui.metainfo.xml"
+      ],
+      "build-options": {
+        "env": {
+          "PATH": "/app/go/bin:/app/node/bin:/usr/bin:/bin",
+          "GOPATH": "/root/go",
+          "CGO_ENABLED": "1",
+          "PKG_CONFIG_PATH": "/app/lib/pkgconfig"
+        },
+        "append-path": "/app/go/bin:/app/node/bin"
+      },
+      "sources": [
+        {
+          "type": "dir",
+          "path": ".",
+          "skip": [
+            ".git",
+            "node_modules",
+            "build",
+            ".wails"
+          ]
+        }
+      ]
+    }
+  ]
+}
