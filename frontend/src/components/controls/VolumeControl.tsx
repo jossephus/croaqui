@@ -1,11 +1,9 @@
-import { Box, Menu, Portal, Slider, Text } from "@chakra-ui/react";
-import React from "react";
+import { Box, Menu, Portal, Slider } from "@chakra-ui/react";
 import { SetVolume, ToggleMute } from "../../../wailsjs/go/player/Player";
 import { usePlayerStore } from "@/store";
 import { ChakraIcon } from "../ChackraIcon";
 import { getNeutral } from "@/utils";
 import { TbVolume, TbVolumeOff } from "react-icons/tb";
-import { IoVolumeHigh } from "react-icons/io5";
 
 const SliderControl: any = Slider.Control;
 const SliderTrack: any = Slider.Track;
@@ -27,7 +25,7 @@ const VolumeControl = ({
   const volume = usePlayerStore((state) => state.volume);
   const { handleVolume, handleMute } = {
     handleVolume: (value: any) => {
-      SetVolume(Math.min(Number(value), 100)).then((res) => {
+      SetVolume(Math.max(Math.min(Number(value), 100), 0)).then((res) => {
         setVolumeState(res.data.volume);
       });
     },
@@ -41,15 +39,7 @@ const VolumeControl = ({
     const sign = e.deltaY / Math.abs(e.deltaY);
     handleVolume(volume - sign * 5);
   };
-  const volumeColor = [
-    "red ",
-    "orange",
-    "yellow",
-    "green",
-    "blue",
-    "indigo",
-    "violet",
-  ];
+
   return (
     <>
       {small ? (
@@ -75,13 +65,7 @@ const VolumeControl = ({
               <ChakraIcon
                 icon={TbVolume}
                 boxSize={5}
-                // onClick={() => {
-                //   handleMute();
-                // }}
-                color={`hsla(${Math.min(70, 120 - volume)}, 60%, 50%, ${Math.max(0.1, volume / 100)})`}
-                // _dark={{
-                //   color: getNeutral("dark", 300),
-                // }}
+                color={`hsla(${Math.min(70, 120 - volume)}, 60%, 50%, ${Math.max(0.3, volume / 100)})`}
               />
             </MenuTrigger>
             <Portal>

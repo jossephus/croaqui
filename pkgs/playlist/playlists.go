@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+
 	"github.com/H0lyDiv3r/croaqui/pkgs/db"
 	customErr "github.com/H0lyDiv3r/croaqui/pkgs/error"
-	"log"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -33,6 +34,7 @@ type song struct {
 	Duration string `json:"duration"`
 	Genre    string `json:"genre"`
 	Position int    `json:"position"`
+	Favorite bool   `json:"favorite"`
 }
 
 type playlist struct {
@@ -87,7 +89,6 @@ func (p *Playlist) AddToFavorites(musicId uint) (*ReturnType, error) {
 		return nil, nil
 	}
 
-	fmt.Println("showing the title", favId)
 	//nolint:gosec
 	return p.AddToPlaylist(musicId, uint(favId))
 }
@@ -105,7 +106,6 @@ func (p *Playlist) RemoveFromFavorites(musicId uint) (*ReturnType, error) {
 		WHERE pm.playlist_id = ? AND pm.music_id = ?
 		`, favId, musicId).Scan(&mid)
 
-	fmt.Println("showing the title", favId, mid)
 	//nolint:gosec
 	return p.RemoveFromPlaylist(musicId, uint(favId), uint(mid))
 }
@@ -213,7 +213,7 @@ func (p *Playlist) CreatePlaylist(name string) (*ReturnType, error) {
 		SELECT EXISTS(SELECT 1 FROM playlists pl
 		WHERE pl.name = ?)`, name).Scan(&found)
 
-	fmt.Println("found a playlist", found, name)
+
 
 	if found == 1 {
 		emitter := customErr.New("db_error", "playlist already exists")
@@ -272,15 +272,18 @@ func (p *Playlist) GetPlaylist(id uint) *ReturnType {
 		AND p.deleted_at IS NULL
 		`, id).Scan(&playlistData.Counts)
 	db.DBInstance.Instance.Raw(`
-		SELECT pm.playlist_id,pm.music_id,p.name as pname,pm.id AS ipl,m.id , m.name,m.path,mm.title,mm.artist,mm.album,mm.duration,mm.genre FROM playlist_musics pm
+		SELECT pm.playlist_id,pm.music_id,p.name as pname,pm.id AS ipl,m.id , m.name,m.path,mm.title,mm.artist,mm.album,mm.duration,mm.genre,
+		CASE WHEN p.name = 'favorites' THEN TRUE ELSE FALSE END as favorite
+		FROM playlist_musics pm
 		LEFT JOIN playlists p ON pm.playlist_id = p.id
 		LEFT JOIN music_files m ON pm.music_id = m.id
 		LEFT JOIN music_meta_data mm ON m.meta_data_id = mm.id
 		WHERE p.id = ?
+
 		AND pm.deleted_at IS NULL
 		`, id).Scan(&playlistData.Songs)
 
-	fmt.Println("showing playlist data", playlistData.Counts, id)
+
 
 	return &ReturnType{Data: struct {
 		Playlist playlist `json:"playlist"`

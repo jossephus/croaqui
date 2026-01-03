@@ -1,11 +1,10 @@
-import { Box, Text, Input, Slider } from "@chakra-ui/react";
+import { Box, Text, Slider } from "@chakra-ui/react";
 import { GetPosition, SetPosition } from "../../../wailsjs/go/player/Player";
 import { usePlayerStore } from "@/store";
 import { getNeutral } from "@/utils";
 
 const TimeLine: React.FC = () => {
   const length = usePlayerStore((state) => state.duration);
-  const loaded = usePlayerStore((state) => state.loaded);
   const setPositionState = usePlayerStore((state) => state.setPosition);
   const position = usePlayerStore((state) => state.position);
   const { handlePosition } = {
@@ -23,7 +22,6 @@ const TimeLine: React.FC = () => {
   const SliderControl: any = Slider.Control;
   const SliderTrack: any = Slider.Track;
   const SliderThumb: any = Slider.Thumb;
-  const SliderMarkerGroup: any = Slider.MarkerGroup;
   const SliderRange: any = Slider.Range;
   return (
     <Box
@@ -34,14 +32,14 @@ const TimeLine: React.FC = () => {
       fontSize={"sm"}
     >
       <Box display={"flex"} fontWeight={300}>
-        {Math.floor(position) / 3600 < 10 && <Text>0</Text>}
-        <Text>{Math.floor(position / 3600) ?? 0}</Text>
+        {Math.max(Math.floor(position) / 3600, 0) < 10 && <Text>0</Text>}
+        <Text>{Math.max(Math.floor(position / 3600), 0) ?? 0}</Text>
         <Text>:</Text>
-        {(Math.floor(position) / 60) % 60 < 10 && <Text>0</Text>}
-        <Text>{Math.floor((position / 60) % 60) ?? 0}</Text>
+        {Math.max(Math.floor(position) / 60, 0) % 60 < 10 && <Text>0</Text>}
+        <Text>{Math.max(Math.floor((position / 60) % 60), 0) ?? 0}</Text>
         <Text>:</Text>
-        {Math.floor(position) % 60 < 10 && <Text>0</Text>}
-        <Text>{Math.floor(position % 60) ?? 0}</Text>
+        {Math.max(Math.floor(position) % 60, 0) < 10 && <Text>0</Text>}
+        <Text>{Math.max(Math.floor(position % 60), 0) ?? 0}</Text>
       </Box>
       <Box flex={1} mx={2}>
         <Slider.Root

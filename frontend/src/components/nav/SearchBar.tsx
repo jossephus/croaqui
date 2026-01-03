@@ -1,24 +1,23 @@
-import { Box, Button, Input, InputGroup, Text } from "@chakra-ui/react";
+import { Box, Input, InputGroup, Text } from "@chakra-ui/react";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import { ChakraIcon } from "../ChackraIcon";
 import { getBrandWithAlpha, getNeutral } from "@/utils";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { handleSearch } from "@/utils/action";
-import { useDataStore } from "@/store";
+import { useDataStore, useQueryStore } from "@/store";
 import { IoAlbums } from "react-icons/io5";
-import { BiNote, BiText, BiUser } from "react-icons/bi";
-import { MdTitle } from "react-icons/md";
+import { BiText, BiUser } from "react-icons/bi";
 import { PiPath } from "react-icons/pi";
 import { BsMusicNote } from "react-icons/bs";
 import { useLocation } from "wouter";
 
 export const SearchBar = () => {
-  const [phrase, setPhrase] = useState<string>("");
   const [focused, setFocused] = useState(false);
   const [_, setLocation] = useLocation();
   const setAudioFiles = useDataStore((state) => state.setMusicFiles);
   const searchRef = useRef<HTMLInputElement>(null);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const phrase = useQueryStore((state) => state.search);
   const filters = [
     { name: "album", icon: IoAlbums },
     { name: "artist", icon: BiUser },
@@ -29,13 +28,12 @@ export const SearchBar = () => {
 
   const handleSubmit = async (e: React.FormEvent | Event) => {
     e.preventDefault();
-    console.log("going to submit now", phrase);
     setLocation("/search-results");
     const res = await handleSearch(phrase, activeFilters);
     setAudioFiles(res);
   };
   const handleChange = (e: any) => {
-    setPhrase(e.target.value);
+    useQueryStore.setState((state) => ({ ...state, search: e.target.value }));
   };
 
   const toggleActiveFilter = (filter: string) => {
@@ -46,9 +44,6 @@ export const SearchBar = () => {
     }
   };
 
-  useEffect(() => {
-    console.log("focused", searchRef.current);
-  }, [focused]);
   return (
     <Box display={"flex"} flexDir={"column"}>
       {focused ? (
@@ -61,7 +56,6 @@ export const SearchBar = () => {
           zIndex={3}
           onClick={(e) => {
             e.stopPropagation();
-            console.log("closing");
             setFocused(false);
           }}
         ></Box>
