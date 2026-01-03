@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.github.H0lyDiv3r.croaqui</id>
+  <metadata_license>MIT</metadata_license>
+  <name>Croaqui</name>
+  <summary>A modern music player built with Wails</summary>
+  <description>
+    <p>Croaqui is a modern, cross-platform music player built with Wails, featuring a beautiful interface and powerful music management capabilities.</p>
+  </description>
+  <launchable type="desktop-id">com.github.H0lyDiv3r.croaqui.desktop</launchable>
+  <provides>
+    <binary>croaqui</binary>
+  </provides>
+  <url type="homepage">https://github.com/H0lyDiv3r/croaqui</url>
+  <url type="bugtracker">https://github.com/H0lyDiv3r/croaqui/issues</url>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2024-01-01"/>
+  </releases>
+</component>

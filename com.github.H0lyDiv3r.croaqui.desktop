@@ -1,9 +1,10 @@
 [Desktop Entry]
 Name=Croaqui
-Comment=A modern music player for Linux
-Exec=croaqui
+Comment=A modern music player built with Wails
+Exec=croaqui %U
 Icon=com.github.H0lyDiv3r.croaqui
 Type=Application
 Categories=Audio;Music;Player;
+MimeType=audio/mpeg;audio/flac;audio/ogg;audio/wav
 Terminal=false
 StartupNotify=true

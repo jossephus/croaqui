@@ -1,0 +1,45 @@
+name: Build Flatpak
+
+on:
+  push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      
+      - name: Install Flatpak tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+      
+      - name: Install Flatpak runtimes
+        run: |
+          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          sudo flatpak install -y flathub org.gnome.Platform//46
+          sudo flatpak install -y flathub org.gnome.Sdk//46
+          sudo flatpak install -y flathub org.freedesktop.Sdk.Extension.golang//23.08
+      
+      - name: Generate Flatpak manifest with Nix
+        run: nix build .#flatpak-manifest -o flatpak-manifest
+      
+      - name: Build Flatpak
+        run: |
+          mkdir -p /tmp/croaqui-build /tmp/croaqui-repo
+          cp flatpak-manifest/com.github.H0lyDiv3r.croaqui.json flatpak/
+          flatpak-builder --force-clean --default-branch=master \
+            --ccache \
+            /tmp/croaqui-build \
+            flatpak/com.github.H0lyDiv3r.croaqui.json
+          flatpak build-export /tmp/croaqui-repo /tmp/croaqui-build master
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: croaqui-flatpak
+          path: /tmp/croaqui-repo/

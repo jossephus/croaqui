@@ -1,0 +1,165 @@
+{
+  "app-id": "com.github.H0lyDiv3r.croaqui",
+  "runtime": "org.freedesktop.Platform",
+  "runtime-version": "24.08",
+  "sdk": "org.freedesktop.Sdk",
+  "command": "croaqui",
+  "finish-args": [
+    "--share=ipc",
+    "--socket=fallback-x11",
+    "--socket=wayland",
+    "--device=dri",
+    "--filesystem=home:ro",
+    "--talk-name=org.freedesktop.Notifications"
+  ],
+  "modules": [
+    {
+      "name": "wails-runtime-deps",
+      "buildsystem": "simple",
+      "build-commands": [
+        "install -d /app/lib/pkgconfig"
+      ],
+      "modules": [
+        {
+          "name": "taglib",
+          "buildsystem": "cmake-ninja",
+          "config-opts": [
+            "-DBUILD_SHARED_LIBS=ON"
+          ],
+          "sources": [
+            {
+              "type": "archive",
+              "url": "https://taglib.github.io/releases/taglib-2.0.tar.gz",
+              "sha256": "e36ea877a6370810b97d84cf8f72b1e4ed205149ab3ac8232d44c850f38a2859"
+            }
+          ]
+        },
+        {
+          "name": "utfcpp",
+          "buildsystem": "simple",
+          "build-commands": [
+            "cp -r source /app/include/utfcpp"
+          ],
+          "sources": [
+            {
+              "type": "archive",
+              "url": "https://github.com/nemtrif/utfcpp/archive/refs/tags/v4.0.5.tar.gz",
+              "sha256": "ffc668a310e77607d393f3c18b32715f223da1eac4c4d6e0579a11df8e6b59cf"
+            }
+          ]
+        },
+        {
+          "name": "mpv",
+          "buildsystem": "meson",
+          "config-opts": [
+            "-Dlua=disabled",
+            "-Djavascript=disabled",
+            "-Dlibarchive=disabled",
+            "-Dcdda=disabled",
+            "-Ddvdnav=disabled",
+            "-Dbluray=disabled",
+            "-Dvapoursynth=disabled"
+          ],
+          "build-options": {
+            "cflags": "-I/app/include/utfcpp",
+            "cxxflags": "-I/app/include/utfcpp"
+          },
+          "sources": [
+            {
+              "type": "archive",
+              "url": "https://github.com/mpv-player/mpv/archive/refs/tags/v0.38.0.tar.gz",
+              "sha256": "86d9ef40b6058732f67b46d0bbda24a074fae860b3eaae05bab3145041303066"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "go",
+      "buildsystem": "simple",
+      "build-commands": [
+        "install -d /app",
+        "cp -a . /app/go"
+      ],
+          "sources": [
+            {
+              "type": "archive",
+              "url": "https://go.dev/dl/go1.22.5.linux-amd64.tar.gz",
+              "sha256": "904b924d435eaea086515bc63235b192ea441bd8c9b198c507e85009e6e4c7f0",
+              "dest": "."
+            }
+          ]
+    },
+    {
+      "name": "node",
+      "buildsystem": "simple",
+      "build-commands": [
+        "install -d /app",
+        "cp -a . /app/node"
+      ],
+          "sources": [
+            {
+              "type": "archive",
+              "url": "https://nodejs.org/dist/v20.15.0/node-v20.15.0-linux-x64.tar.xz",
+              "sha256": "4f57f7828e6adb9f6bc77932f10e316cca68b0f160c82b21d9a2c7647c7f10bf",
+              "dest": "."
+            }
+          ]
+    },
+    {
+      "name": "wails",
+      "buildsystem": "simple",
+      "build-commands": [
+        "export PATH=/app/go/bin:/app/node/bin:$PATH",
+        "go install github.com/wailsapp/wails/v2/cmd/wails@v2.9.2",
+        "install -D /root/go/bin/wails /app/bin/wails"
+      ],
+      "build-options": {
+        "env": {
+          "PATH": "/app/go/bin:/app/node/bin:/usr/bin:/bin",
+          "GOPATH": "/root/go",
+          "CGO_ENABLED": "1"
+        }
+      }
+    },
+    {
+      "name": "croaqui",
+      "buildsystem": "simple",
+      "build-commands": [
+        "export PATH=/app/go/bin:/app/node/bin:$PATH",
+        "export GOPATH=/root/go",
+        "export CGO_ENABLED=1",
+        "export PKG_CONFIG_PATH=/app/lib/pkgconfig",
+        "export CGO_CFLAGS=\"-I/app/include\"",
+        "export CGO_LDFLAGS=\"-L/app/lib -ltag_c -ltag -lstdc++ -lz -lm -lmpv\"",
+        "cd /app/share/croaqui",
+        "wails build -clean -platform linux/amd64",
+        "install -Dm755 build/bin/croaqui /app/bin/croaqui",
+        "install -Dm644 frontend/assets/images/logo-universal.png /app/share/icons/hicolor/256x256/apps/com.github.H0lyDiv3r.croaqui.png 2>/dev/null || true",
+        "install -Dm644 com.github.H0lyDiv3r.croaqui.desktop /app/share/applications/com.github.H0lyDiv3r.croaqui.desktop",
+        "install -Dm644 com.github.H0lyDiv3r.croaqui.metainfo.xml /app/share/metainfo/com.github.H0lyDiv3r.croaqui.metainfo.xml"
+      ],
+      "build-options": {
+        "env": {
+          "PATH": "/app/go/bin:/app/node/bin:/usr/bin:/bin",
+          "GOPATH": "/root/go",
+          "CGO_ENABLED": "1",
+          "PKG_CONFIG_PATH": "/app/lib/pkgconfig"
+        },
+        "append-path": "/app/go/bin:/app/node/bin"
+      },
+      "sources": [
+        {
+          "type": "dir",
+          "path": ".",
+          "skip": [
+            ".git",
+            "node_modules",
+            "build",
+            ".wails"
+          ]
+        }
+      ]
+    }
+  ]
+}

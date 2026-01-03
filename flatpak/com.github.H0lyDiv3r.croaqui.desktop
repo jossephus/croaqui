@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Croaqui
+Comment=Music player with MPRIS support
+Exec=croaqui
+Icon=com.github.H0lyDiv3r.croaqui
+Categories=AudioVideo;Audio;Player;
+StartupNotify=true
