@@ -110,7 +110,7 @@
         {
           "type": "archive",
           "url": "https://taglib.org/releases/taglib-1.13.1.tar.gz",
-          "sha256": "e9b61b1ad0ddff4052c965175db56ebc918ad25d2e4ce0797dc6467e5bbd0e39"
+          "sha256": "c8da2b10f1bfec2cd7dbfcd33f4a2338db0765d851a50583d410bacf055cfd0b"
         }
       ]
     },
