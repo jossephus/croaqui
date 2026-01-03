@@ -125,7 +125,7 @@
         {
           "type": "archive",
           "url": "https://github.com/haasn/libplacebo/releases/download/v6.338.2/libplacebo-6.338.2.tar.gz",
-          "sha256": "89f28bbc9c97fa4bbdef4ca1c0b0ff3d4e5cfba25ac9e84df36a5c1d65e737fc"
+          "sha256": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5"
         }
       ]
     },
