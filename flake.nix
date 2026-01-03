@@ -127,7 +127,7 @@
         {
           "type": "archive",
           "url": "https://github.com/mpv-player/mpv/archive/v0.37.0.tar.gz",
-          "sha256": "d0d4ac0e18c8709b5be0813755ef28cf5f98788b86e1b994b69515e76c06cf7e"
+          "sha256": "1d2d4adbaf048a2fa6ee134575032c4b2dad9a7efafd5b3e69b88db935afaddf"
         }
       ]
     },
