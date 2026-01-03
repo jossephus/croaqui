@@ -1,5 +1,5 @@
 {
-  description = "Croaqui - A Wails application";
+  description = "Croaqui - A Wails application with Flatpak support";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -18,41 +18,13 @@
         };
         isLinux = system == "x86_64-linux" || system == "aarch64-linux";
         isDarwin = system == "aarch64-darwin" || system == "x86_64-darwin";
-      in
-      {
-        devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            go
-            wails
-            nodejs
-            pkg-config
-            taglib
-            mpv
-          ] ++ (
-            if isLinux then [
-              gtk3
-              webkitgtk_6_0
-              gcc
-              libxcb
-            ] else if isDarwin then [
-              clang
-              llvm
-            ] else [ ]
-          );
 
-          shellHook = ''
-            # Create symlinks for cgo to find headers and libs
-            export PKG_CONFIG_PATH="${pkgs.taglib}/lib/pkgconfig:${pkgs.mpv}/lib/pkgconfig${if isLinux then ":${pkgs.gtk3}/lib/pkgconfig:${pkgs.webkitgtk_6_0}/lib/pkgconfig" else ""}"
-          '';
-        };
-
-        packages.default = pkgs.buildGoModule rec {
+        # Core application derivation
+        croaqui = pkgs.buildGoModule rec {
           pname = "croaqui";
           version = "0.1.0";
 
           src = ./.;
-
-          # Replace with actual vendorHash after first build
           vendorHash = null;
 
           nativeBuildInputs = with pkgs; [
@@ -81,7 +53,7 @@
             ln -sf ${pkgs.mpv}/include/* internals/taglib/include/ 2>/dev/null || true
             ln -sf ${pkgs.taglib}/lib/* internals/taglib/lib/ 2>/dev/null || true
             ln -sf ${pkgs.mpv}/lib/* internals/taglib/lib/ 2>/dev/null || true
-
+            
             export PKG_CONFIG_PATH="${pkgs.taglib}/lib/pkgconfig:${pkgs.mpv}/lib/pkgconfig${if isLinux then ":${pkgs.gtk3}/lib/pkgconfig:${pkgs.webkitgtk_6_0}/lib/pkgconfig" else ""}"
             export CGO_CFLAGS="-I${pkgs.taglib}/include -I${pkgs.mpv}/include"
             export CGO_LDFLAGS="-L${pkgs.taglib}/lib -L${pkgs.mpv}/lib -ltag_c -ltag -lstdc++ -lz -lm -lmpv"
@@ -101,94 +73,118 @@
           };
         };
 
-        packages.flatpak = pkgs.stdenv.mkDerivation rec {
-          pname = "croaqui-flatpak";
-          version = "0.1.0";
+        # Flatpak manifest - dependencies resolved via Nix
+        flatpak-manifest = if isLinux then
+          pkgs.stdenv.mkDerivation {
+            pname = "croaqui-flatpak-manifest";
+            version = "0.1.0";
+            src = ./.;
+            
+            buildInputs = with pkgs; [ jq ];
+            
+            buildPhase = ''
+              mkdir -p $out
+              cat > $out/com.github.H0lyDiv3r.croaqui.json << 'EOF'
+{
+  "app-id": "com.github.H0lyDiv3r.croaqui",
+  "runtime": "org.gnome.Platform",
+  "runtime-version": "46",
+  "sdk": "org.gnome.Sdk",
+  "sdk-extensions": ["org.freedesktop.Sdk.Extension.golang"],
+  "command": "croaqui",
+  "finish-args": [
+    "--socket=wayland",
+    "--socket=x11",
+    "--share=ipc",
+    "--device=dri",
+    "--socket=pulseaudio",
+    "--filesystem=home",
+    "--env=LC_NUMERIC=C"
+  ],
+  "modules": [
+    {
+      "name": "taglib",
+      "buildsystem": "cmake-ninja",
+      "config-opts": ["-DBUILD_SHARED_LIBS=ON"],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://taglib.org/releases/taglib-1.13.1.tar.gz",
+          "sha256": "e9b61b1ad0ddff4052c965175db56ebc918ad25d2e4ce0797dc6467e5bbd0e39"
+        }
+      ]
+    },
+    {
+      "name": "mpv",
+      "buildsystem": "meson",
+      "config-opts": [
+        "-Dlibmpv=true",
+        "-Dbuild-date=false",
+        "-Dalsa=disabled"
+      ],
+      "cleanup": ["/share/man"],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/mpv-player/mpv/archive/v0.37.0.tar.gz",
+          "sha256": "d0d4ac0e18c8709b5be0813755ef28cf5f98788b86e1b994b69515e76c06cf7e"
+        }
+      ]
+    },
+    {
+      "name": "croaqui",
+      "buildsystem": "simple",
+      "build-commands": [
+        "wails build -o croaqui",
+        "install -Dm755 build/bin/croaqui /app/bin/croaqui"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": "."
+        }
+      ]
+    }
+  ]
+}
+EOF
+            '';
+          }
+        else
+          null;
 
-          src = ./.;
+      in
+      {
+        devShells.default = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            go
+            wails
+            nodejs
+            pkg-config
+            taglib
+            mpv
+          ] ++ (
+            if isLinux then [
+              gtk3
+              webkitgtk_6_0
+              gcc
+              libxcb
+              flatpak
+              flatpak-builder
+            ] else if isDarwin then [
+              clang
+              llvm
+            ] else [ ]
+          );
 
-          nativeBuildInputs = with pkgs; [
-            flatpak
-            flatpak-builder
-            rsync
-          ];
-
-          buildPhase = ''
-            # Setup user Flatpak directory
-            export HOME=$TMPDIR/home
-            mkdir -p $HOME/.local/share/flatpak
-            export XDG_DATA_HOME=$HOME/.local/share
-
-            # Build Flatpak package
-            flatpak-builder --force-clean \
-              --user \
-              --repo=$out/repo \
-              $out/.flatpak-builder/build \
-              com.github.H0lyDiv3r.croaqui.json
-
-            # Create single-file bundle
-            flatpak build-bundle $out/repo $out/com.github.H0lyDiv3r.croaqui.flatpak com.github.H0lyDiv3r.croaqui
+          shellHook = ''
+            export PKG_CONFIG_PATH="${pkgs.taglib}/lib/pkgconfig:${pkgs.mpv}/lib/pkgconfig${if isLinux then ":${pkgs.gtk3}/lib/pkgconfig:${pkgs.webkitgtk_6_0}/lib/pkgconfig" else ""}"
           '';
+        };
 
-          installPhase = ''
-            mkdir -p $out
-            cp -r repo $out/
-            echo "Flatpak repo created at $out/repo"
-            echo "Flatpak bundle created at $out/com.github.H0lyDiv3r.croaqui.flatpak"
-            echo ""
-            echo "To install the bundle, run:"
-            echo "  flatpak install --user $out/com.github.H0lyDiv3r.croaqui.flatpak"
-            echo ""
-            echo "Or add as remote and install:"
-            echo "  flatpak remote-add --if-not-exists croaqui $out/repo --no-gpg-verify"
-            echo "  flatpak install croaqui com.github.H0lyDiv3r.croaqui"
-          '';
-
-          meta = with pkgs.lib; {
-            description = "Croaqui Flatpak package";
-            homepage = "https://github.com/H0lyDiv3r/croaqui";
-            license = licenses.mit;
-            platforms = [ "x86_64-linux" "aarch64-linux" ];
-          };
-        } // (if isDarwin then { } else { });
-
-        packages.flatpakRepo = pkgs.stdenv.mkDerivation rec {
-          pname = "croaqui-flatpak-repo";
-          version = "0.1.0";
-
-          src = ./.;
-
-          nativeBuildInputs = with pkgs; [
-            flatpak
-            flatpak-builder
-            rsync
-          ];
-
-          buildPhase = ''
-            # Setup user Flatpak directory
-            export HOME=$TMPDIR/home
-            mkdir -p $HOME/.local/share/flatpak
-            export XDG_DATA_HOME=$HOME/.local/share
-
-            flatpak-builder --force-clean \
-              --user \
-              --repo=$out/repo \
-              $out/.flatpak-builder/build \
-              com.github.H0lyDiv3r.croaqui.json
-          '';
-
-          installPhase = ''
-            mkdir -p $out
-            cp -r repo $out/
-          '';
-
-          meta = with pkgs.lib; {
-            description = "Croaqui Flatpak repository";
-            homepage = "https://github.com/H0lyDiv3r/croaqui";
-            license = licenses.mit;
-            platforms = [ "x86_64-linux" "aarch64-linux" ];
-          };
-        } // (if isDarwin then { } else { });
+        packages.default = croaqui;
+        
+        packages.flatpak-manifest = if isLinux then flatpak-manifest else null;
       }
     );
 }

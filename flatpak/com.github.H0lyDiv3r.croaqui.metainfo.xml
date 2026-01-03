@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.github.H0lyDiv3r.croaqui</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Croaqui</name>
+  <summary>Music player with MPRIS support</summary>
+  <description>
+    <p>Croaqui is a music player written in Go with Wails, featuring MPRIS support for media controls.</p>
+  </description>
+  <url type="homepage">https://github.com/H0lyDiv3r/croaqui</url>
+  <url type="bugtracker">https://github.com/H0lyDiv3r/croaqui/issues</url>
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="0.1.0" date="2026-01-03">
+      <description>
+        <p>Initial release</p>
+      </description>
+    </release>
+  </releases>
+</component>
