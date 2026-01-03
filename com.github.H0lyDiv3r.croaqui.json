@@ -50,7 +50,7 @@
             {
               "type": "archive",
               "url": "https://github.com/mpv-player/mpv/archive/refs/tags/v0.38.0.tar.gz",
-              "sha256": "5a7d1f9a0d5c2f5a9b4f5a9b4f5a9b4f5a9b4f5a9b4f5a9b4f5a9b4f5a9b4f5a9"
+              "sha256": "86d9ef40b6058732f67b46d0bbda24a074fae860b3eaae05bab3145041303066"
             }
           ]
         }
@@ -79,14 +79,14 @@
         "install -d /app",
         "cp -a . /app/node"
       ],
-      "sources": [
-        {
-          "type": "archive",
-          "url": "https://nodejs.org/dist/v20.15.0/node-v20.15.0-linux-x64.tar.xz",
-          "sha256": "0c75e8225d8c5c1f8e45450b9478401b4d5b7d8e9a0b1c2d3e4f5a6b7c8d9e0f",
-          "dest": "."
-        }
-      ]
+          "sources": [
+            {
+              "type": "archive",
+              "url": "https://nodejs.org/dist/v20.15.0/node-v20.15.0-linux-x64.tar.xz",
+              "sha256": "4f57f7828e6adb9f6bc77932f10e316cca68b0f160c82b21d9a2c7647c7f10bf",
+              "dest": "."
+            }
+          ]
     },
     {
       "name": "wails",

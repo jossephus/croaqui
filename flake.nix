@@ -114,14 +114,15 @@
           ];
 
           buildPhase = ''
-            # Ensure Flatpak runtime exists
-            mkdir -p $out/.flatpak-builder/build
+            # Setup user Flatpak directory
+            export HOME=$TMPDIR/home
+            mkdir -p $HOME/.local/share/flatpak
+            export XDG_DATA_HOME=$HOME/.local/share
 
             # Build Flatpak package
             flatpak-builder --force-clean \
+              --user \
               --repo=$out/repo \
-              --install-deps-from=flathub \
-              --disable-download \
               $out/.flatpak-builder/build \
               com.github.H0lyDiv3r.croaqui.json
 
@@ -164,10 +165,14 @@
           ];
 
           buildPhase = ''
-            mkdir -p $out/.flatpak-builder/build
+            # Setup user Flatpak directory
+            export HOME=$TMPDIR/home
+            mkdir -p $HOME/.local/share/flatpak
+            export XDG_DATA_HOME=$HOME/.local/share
+
             flatpak-builder --force-clean \
+              --user \
               --repo=$out/repo \
-              --install-deps-from=flathub \
               $out/.flatpak-builder/build \
               com.github.H0lyDiv3r.croaqui.json
           '';
