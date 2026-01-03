@@ -185,6 +185,39 @@ EOF
         packages.default = croaqui;
         
         packages.flatpak-manifest = if isLinux then flatpak-manifest else null;
+
+        packages.flatpak-build = if isLinux then
+          pkgs.stdenv.mkDerivation {
+            pname = "croaqui-flatpak-build";
+            version = "0.1.0";
+            src = ./.;
+
+            nativeBuildInputs = with pkgs; [
+              flatpak
+              flatpak-builder
+              coreutils
+            ];
+
+            buildPhase = ''
+              # Install Flatpak runtimes
+              flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || true
+              flatpak install -y --noninteractive flathub org.gnome.Platform//46
+              flatpak install -y --noninteractive flathub org.gnome.Sdk//46
+              flatpak install -y --noninteractive flathub org.freedesktop.Sdk.Extension.golang//23.08
+
+              # Build Flatpak
+              mkdir -p $out/build $out/repo
+              flatpak-builder --force-clean --default-branch=master \
+                --ccache \
+                $out/build \
+                flatpak/com.github.H0lyDiv3r.croaqui.json
+              flatpak build-export $out/repo $out/build master
+            '';
+
+            installPhase = "true";
+          }
+        else
+          null;
       }
     );
 }
