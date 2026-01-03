@@ -63,14 +63,14 @@
         "install -d /app",
         "cp -a . /app/go"
       ],
-      "sources": [
-        {
-          "type": "archive",
-          "url": "https://go.dev/dl/go1.22.5.linux-amd64.tar.gz",
-          "sha256": "4236a8a560c81cbb49626c5538270cbf9e5290f3835479239444c52675a72523",
-          "dest": "."
-        }
-      ]
+          "sources": [
+            {
+              "type": "archive",
+              "url": "https://go.dev/dl/go1.22.5.linux-amd64.tar.gz",
+              "sha256": "904b924d435eaea086515bc63235b192ea441bd8c9b198c507e85009e6e4c7f0",
+              "dest": "."
+            }
+          ]
     },
     {
       "name": "node",
