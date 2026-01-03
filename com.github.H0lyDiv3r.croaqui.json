@@ -36,7 +36,10 @@
         },
         {
           "name": "utfcpp",
-          "buildsystem": "cmake-ninja",
+          "buildsystem": "simple",
+          "build-commands": [
+            "cp -r source /app/include/utfcpp"
+          ],
           "sources": [
             {
               "type": "archive",
@@ -57,6 +60,10 @@
             "-Dbluray=disabled",
             "-Dvapoursynth=disabled"
           ],
+          "build-options": {
+            "cflags": "-I/app/include/utfcpp",
+            "cxxflags": "-I/app/include/utfcpp"
+          },
           "sources": [
             {
               "type": "archive",
