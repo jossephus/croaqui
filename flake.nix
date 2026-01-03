@@ -115,6 +115,21 @@
       ]
     },
     {
+      "name": "libplacebo",
+      "buildsystem": "meson",
+      "config-opts": [
+        "-Dvulkan=disabled",
+        "-Dopengl=enabled"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/haasn/libplacebo/releases/download/v6.338.2/libplacebo-6.338.2.tar.gz",
+          "sha256": "89f28bbc9c97fa4bbdef4ca1c0b0ff3d4e5cfba25ac9e84df36a5c1d65e737fc"
+        }
+      ]
+    },
+    {
       "name": "mpv",
       "buildsystem": "meson",
       "config-opts": [
