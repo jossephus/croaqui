@@ -119,7 +119,8 @@
       "buildsystem": "cmake-ninja",
       "config-opts": [
         "-DCMAKE_BUILD_TYPE=Release",
-        "-DBUILD_SHARED_LIBS=ON"
+        "-DBUILD_SHARED_LIBS=ON",
+        "-DENABLE_OPT=0"
       ],
       "sources": [
         {
