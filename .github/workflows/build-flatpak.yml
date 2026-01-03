@@ -12,41 +12,55 @@ on:
 jobs:
   build-flatpak:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Nix
-        uses: cachix/install-nix-action@v24
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-            sandbox = false
+      - name: Install Flatpak
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+
+      - name: Add Flathub remote
+        run: |
+          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          sudo flatpak install -y flathub org.freedesktop.Platform//24.08
+          sudo flatpak install -y flathub org.freedesktop.Sdk//24.08
 
       - name: Build Flatpak package
-        run: nix build .#flatpak --print-build-logs
+        run: flatpak-builder --force-clean --repo=repo --install-deps-from=flathub build com.github.H0lyDiv3r.croaqui.json
+
+      - name: Create Flatpak bundle
+        run: flatpak build-bundle repo com.github.H0lyDiv3r.croaqui.flatpak com.github.H0lyDiv3r.croaqui
 
       - name: Upload Flatpak bundle
         uses: actions/upload-artifact@v4
         with:
           name: croaqui-flatpak
-          path: result/com.github.H0lyDiv3r.croaqui.flatpak
+          path: com.github.H0lyDiv3r.croaqui.flatpak
           retention-days: 30
 
       - name: Upload Flatpak repository
         uses: actions/upload-artifact@v4
         with:
           name: croaqui-flatpak-repo
-          path: result/repo
+          path: repo
           retention-days: 30
+
+      - name: Build artifacts info
+        if: always()
+        run: |
+          echo "=== Flatpak bundle ==="
+          ls -lh com.github.H0lyDiv3r.croaqui.flatpak || echo "Bundle not found"
+          echo "=== Flatpak repo ==="
+          ls -lh repo || echo "Repo not found"
 
       - name: Create Release (on tag)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            result/com.github.H0lyDiv3r.croaqui.flatpak
+            com.github.H0lyDiv3r.croaqui.flatpak
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
