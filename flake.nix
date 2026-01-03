@@ -115,6 +115,21 @@
       ]
     },
     {
+      "name": "glslang",
+      "buildsystem": "cmake-ninja",
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DBUILD_SHARED_LIBS=ON"
+      ],
+      "sources": [
+        {
+          "type": "git",
+          "url": "https://github.com/KhronosGroup/glslang.git",
+          "tag": "14.0.0"
+        }
+      ]
+    },
+    {
       "name": "libplacebo",
       "buildsystem": "meson",
       "config-opts": [
