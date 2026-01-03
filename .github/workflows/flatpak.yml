@@ -18,6 +18,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y flatpak flatpak-builder
       
+      - name: Install Flatpak runtimes and SDK
+        run: |
+          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          sudo flatpak install -y flathub org.gnome.Platform//46
+          sudo flatpak install -y flathub org.gnome.Sdk//46
+          sudo flatpak install -y flathub org.freedesktop.Sdk.Extension.golang//23.08
+      
       - name: Build Flatpak manifest
         run: nix build .#flatpak-manifest -o flatpak-manifest
       
